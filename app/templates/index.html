@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulsifi Technical Assessment</title>
+</head>
+<body>
+    <h1>iHerb Scraping</h1>
+    <p>This mini-app allows the exploration of product data scraped from my.iHerb.com. Users can explore categories
+    and/or perform searches on the product database. The output of this app is a boxplot showing price distributions
+    of categories. Users have the option of viewing the relationship between "super categories", i.e. the highest
+    level categories on iHerb, or the subcategories directly underneath these in the hierarchy.</p>
+    <p>Additionally, users may choose to input a search string. This will generate a boxplot consisting of only the
+    items relevant to the search. "Relevant" is defined as having a search similarity of more than the given
+    threshold. The 100 most relevant results will be printed below the boxplot.</p>
+    <form method="POST" enctype=multipart/form-data>
+        <select name="CategorySelector">
+            <option SELECTED value="AllCategories">All Categories</option>
+            {% for o in category_list %}
+                <option value="{{ o }}">{{ o }}</option>
+            {% endfor %}
+        </select>
+        {% if query_string is defined %}
+            <input name="SearchString" type="text" value="{{ query_string }}"/>
+        {% else %}
+            <input name="SearchString" type="text" />
+        {% endif %}
+        {% if query_thresh is defined %}
+            <input name="SearchThresh" type="number" min="0" max="100" value="{{ query_thresh }}" step="1"/>
+        {% else %}
+            <input name="SearchThresh" type="number" min="0" max="100" value="100" step="1"/>
+        {% endif %}
+        <input type="submit" />
+    </form>
+    <br />
+    <br />
+
+    {% if byte_string is not none %}
+        {% if category is not none %}
+            <h2>Distribution of prices for category '{{ category }}'</h2>
+        {% else %}
+            <h2>Distribution of prices for all categories</h2>
+        {% endif %}
+        <img src="{{ byte_string }}" />
+    {% endif %}
+
+    {% if query_string is defined %}
+        {% if item_list is not none %}
+            <h2>Top results for search '{{ query_string }}' with a threshold of '{{ query_thresh }}%'</h2>
+            <table>
+                <tr><th>Name</th><th>Price</th><th>Rating</th><th>URL</th><th>Query Match</th></tr>
+                {% for entry in item_list %}
+                    <tr><td>{{ entry.name }}</td><td>{{ entry.price }} {{ entry.currency }}</td><td>{{ entry.rating }} / 5</td>
+                        <td><a href="{{ entry.url }}">Link to Product</a></td>
+                        <td>{{ entry.similarity_to_query }}%</td></tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            {% if category is not none %}
+                <h2>No search results for search '{{ query_string }}' with a threshold of '{{ query_thresh }}%' in category '{{ category }}'</h2>
+            {% else %}
+                <h2>No search results for search '{{ query_string }}' with a threshold of '{{ query_thresh }}%'</h2>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+</body>
+</html>
